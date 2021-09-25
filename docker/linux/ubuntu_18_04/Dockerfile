@@ -2,6 +2,7 @@ FROM ubuntu:18.04
 
 RUN apt update -y
 RUN apt install gcc -y
+RUN apt install clang -y
 RUN apt install g++ -y
 RUN apt install cmake -y
 RUN apt install pkg-config -y

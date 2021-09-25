@@ -34,9 +34,22 @@ jobs:
       - name: Create script
         run:  |-
             cat << EOF > sample_script.sh
+            set -e
+            set -u
+            set -o pipefail
+            set -x
             echo 'Hello, world ${{ matrix. os }}'
             ls -l /project
+            echo -e '#include <stdio.h>\nint main(int argc, char* argv[]) { printf("hello world"); return 0;}' | ${{ matrix.compiler }} -xc -
+            if [ "${{ matrix.arch }}" == "amd64" ]; then
+              STR_TO_FIND="x86-64"
+            fi
+            if [ "${{ matrix.arch }}" == "arm64" ]; then
+              STR_TO_FIND="aarch64"
+            fi
+            echo \$STR_TO_FIND
+            file a.out | grep \$STR_TO_FIND
             EOF
 
       - name: Run test inside docker
-        run: cat sample_script.sh | docker run -i --rm -v $PWD:/project workflow_test_${{ matrix.os}}_${{ matrix.arch}}:test bash -c 'source /dev/stdin'
+        run: cat sample_script.sh && cat sample_script.sh | docker run -i --rm -v $PWD:/project workflow_test_${{ matrix.os}}_${{ matrix.arch}}:test bash -c 'source /dev/stdin'
