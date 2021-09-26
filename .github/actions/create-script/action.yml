@@ -1,0 +1,39 @@
+name: 'Create script'
+description: 'Create the script to run the test'
+inputs:
+  os:
+    description: 'OS on which the script runs'
+    required: true
+  compiler:
+    description: 'Compiler to use to run the test'
+    required: true
+  arch:
+    description: 'Architecture on which the test runs'
+    required: true
+  filename:
+    description: 'Filename where to put the script'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - run:  |-
+        cat << EOF > ${{ inputs.filename }}
+        set -e
+        set -u
+        set -o pipefail
+        set -x
+        echo 'Hello, world ${{ inputs.os }}'
+        ${{ inputs.compiler }} --version
+        echo -e '#include <stdio.h>\nint main(int argc, char* argv[]) { printf("hello world"); return 0;}' | ${{ inputs.compiler }} -xc -
+        if [ "${{ inputs.arch }}" == "amd64" ]; then
+          STR_TO_FIND="x86-64"
+        fi
+        if [ "${{ inputs.arch }}" == "arm64" ]; then
+          STR_TO_FIND="aarch64"
+        fi
+        echo \$STR_TO_FIND
+        file a.out | grep \$STR_TO_FIND
+        EOF
+        chmod +x ${{ inputs.filename }}
+      shell: bash
+
